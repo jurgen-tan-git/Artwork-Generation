@@ -1,85 +1,86 @@
 import streamlit as st
 import torch
-import torch.nn as nn
 import torchvision.transforms as transforms
 from PIL import Image
 import io
-import gc
 
+# Define the transformations to be applied to the input image
+transform = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+])
 
-t = transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.5,0.5,0.5),(0.5,0.5,0.5))])
-
-# @st.cache_resource
+# Load the pre-trained CycleGAN model for style transfer
+@st.cache(allow_output_mutation=True)
 def load_model():
     model = torch.jit.load('checkpoint/CycleGAN_Generator_50.pt')
-    # model = torch.load('checkpoint/latest_net_G.pt')
-    print(type(model))
     return model
 
-Gen_BA = load_model()
-
-
-def predict(im,Gen_BA): 
-    w,h = im.size
-    if h or w >=500:
-        scale_factor = 500/max(h,w)
+def predict(im, Gen_BA): 
+    w, h = im.size
+    if h or w >= 500:
+        scale_factor = 500 / max(h, w)
         height = int(h * scale_factor)
         width = int(w * scale_factor)
-        im = transforms.Resize((height,width))(im)
+        im = transforms.Resize((height, width))(im)
 
-    input = t(im)
+    input = transform(im)
     Gen_BA.eval()
     output = Gen_BA(input.unsqueeze(0))
-    output = output/2 +0.5
+    output = output / 2 + 0.5
     return (transforms.ToPILImage()(output.squeeze(0)))
 
-st.title(body = "Van Gogh style transfer using CycleGAN.")
-st.markdown("""This app has been built using a machine learning model called CycleGAN. For more information on CycleGAN, 
-            you can read this [paper](https://arxiv.org/abs/1703.10593). The dataset used has been sourced from 
-            [UC Berkeley](https://people.eecs.berkeley.edu/~taesung_park/CycleGAN/datasets/) and other open sourced datasets on Kaggle.
-            If you're interested in the code behind the project, the project is hosted on my [GitHub](https://github.com/bear96/cyclegan-vangogh).
-            Alternatively, you can choose to clone into the repository using  
+# Set the page layout to wide mode
+st.set_page_config(layout="wide")
 
-            git clone https://github.com/bear96/cyclegan-vangogh.git""")
-st.markdown("""The model hasn't yet been trained to it's limits. It performs poorly on people and objects such as cars. 
-However, the model performs reasonably well on pictures of scenery or nature. The dataset that was used to train the model mostly
-contained pictures of scenery, hence this handicap.""")
-st.warning("""Please note that the app may crash if you provide it with an image that's too large with very high resolution. \
-    Typically, the model seems to perform well on images which are less than or equal to 1MB in size.
-    """)
-vg = Image.open("style/Self-Portrait_(1889)_by_Vincent_van_Gogh.jpg")
-vg = vg.resize([int(vg.size[0]*0.2),int(vg.size[1]*0.2)])
-with st.sidebar:
-    st.image(vg,caption="Self portrait by Van Gogh, 1889")
+# Header
+st.title("[Vincent van Gogh](https://en.wikipedia.org/wiki/Vincent_van_Gogh) Style Transfer using CycleGAN")
+st.markdown("""
+    This app has been built using a machine learning model called CycleGAN. For more information on CycleGAN, 
+    you can read this [paper](https://arxiv.org/abs/1703.10593). The dataset used has been sourced from 
+    [UC Berkeley](https://people.eecs.berkeley.edu/~taesung_park/CycleGAN/datasets/) and other open sourced datasets on Kaggle.
+""")
 
-st.sidebar.title("Who doesn't know about the legendary post-impressionist painter, Vincent Van Gogh?")
+# Information about Van Gogh in the sidebar
 with st.sidebar:
+    st.title("Vincent van Gogh - The Artistic Genius")
+    st.image("vangogh.jpg", caption="Self-portrait by Vincent van Gogh, 1887", use_column_width=True)
     st.markdown("""
-    *Vincent Van Gogh, the red-haired Dutch master of the paintbrush, was a genius whose artistic 
-    legacy continues to inspire people around the world. He is best known for his breathtakingly beautiful paintings, 
-    which were so ahead of their time that many people thought he was just a little bit crazy. But don't worry, 
-    it wasn't his fault - he was just misunderstood! From his famous Sunflowers series to his unforgettable Starry Night, 
-    Van Gogh's work is a testament to the power of imagination, creativity, and a healthy dose of eccentricity.*
+        Vincent van Gogh (1853 - 1890) was a Dutch post-impressionist painter and one of the most renowned artists in the history of Western art. 
+        His unique style, characterized by bold colors and expressive brushwork, has left an indelible mark on the art world.
+        
+        * Early Life: Vincent van Gogh was born in the Netherlands and initially pursued careers as an art dealer and a missionary before dedicating himself to art.
+        * Artistic Struggles: Van Gogh battled mental health issues throughout his life, and his struggles were often reflected in his paintings.
+        * Artistic Legacy: Although van Gogh's work was not widely recognized during his lifetime, he has since become one of the most celebrated artists of all time.
+        * Famous Works: Some of his most famous works include "Starry Night," "Sunflowers," "Irises," and numerous self-portraits.
+        
+        Vincent van Gogh's masterpieces continue to captivate audiences worldwide, and his legacy lives on as an inspiration to countless artists and art enthusiasts.
+        
+        Click [here](https://vangoghexpo.com/) to find out more about Van Gogh: The Immersive Experience.
     """)
+    
+# Upload an image for style transfer
+file = st.file_uploader(label="Upload your image", type=['.png', '.jpg', 'jpeg'])
 
-file = st.file_uploader(label="Upload your image",type=['.png','.jpg','jpeg'])
-
-if not file:
-    st.warning("Please upload an image")
-    gc.collect()
-    st.stop()
-else:
+if file:
     image = file.read()
     st.caption("Your image.")
-    st.image(image, use_column_width=True)
-    img = Image.open(io.BytesIO(image)).convert("RGB")
-    pred_button = st.button("Generate")
 
-if pred_button:
-    with st.spinner("Generating. Please wait..."):
-        gen_image = predict(img,Gen_BA)
-        del img
-        st.caption("Generated image.")
-        st.image(gen_image)
-    del gen_image
-    del image
+    # Display uploaded image and generated image side by side
+    col1, col2 = st.columns(2)
+    with col1:
+        st.image(image, caption="Uploaded Image", use_column_width=True)
+        pred_button = st.button("Generate")
+    with col2:
+        if pred_button:
+            # Load the pre-trained model
+            Gen_BA = load_model()
+
+            with st.spinner("Generating. Please wait..."):
+                img = Image.open(io.BytesIO(image)).convert("RGB")
+                gen_image = predict(img, Gen_BA)
+                st.image(gen_image, caption="Generated Image", use_column_width=True)
+
+            # Clean up memory
+            del Gen_BA, img, gen_image, image
+            torch.cuda.empty_cache()

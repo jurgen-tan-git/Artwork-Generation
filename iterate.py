@@ -9,7 +9,7 @@ parser.add_argument('--inputfolder', type=str, required=True, help='input image 
 args = parser.parse_args()
 
 t = transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.5,0.5,0.5),(0.5,0.5,0.5))])
-torch.set_default_device('mps')
+torch.set_default_device('cpu')
 
 # @st.cache_resource
 def load_model():
