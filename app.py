@@ -4,7 +4,6 @@ import torchvision.transforms as transforms
 from PIL import Image
 import io
 from skimage.metrics import peak_signal_noise_ratio, structural_similarity
-from skimage.color import rgb2gray
 import numpy as np
 
 # Define the transformations to be applied to the input image
@@ -23,7 +22,7 @@ def get_psnr(img1, img2):
     return peak_signal_noise_ratio(img1, img2)
 
 def get_ssim(img1, img2):
-    return structural_similarity(rgb2gray(img1), rgb2gray(img2), data_range=255)
+    return structural_similarity(img1, img2, data_range=255, channel_axis=2)
 
 def predict(im, Gen_BA): 
     w, h = im.size
