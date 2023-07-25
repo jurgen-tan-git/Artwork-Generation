@@ -3,6 +3,9 @@ import torch
 import torchvision.transforms as transforms
 from PIL import Image
 import io
+from skimage.metrics import peak_signal_noise_ratio, structural_similarity
+from skimage.color import rgb2gray
+import numpy as np
 
 # Define the transformations to be applied to the input image
 transform = transforms.Compose([
@@ -11,10 +14,16 @@ transform = transforms.Compose([
 ])
 
 # Load the pre-trained CycleGAN model for style transfer
-@st.cache(allow_output_mutation=True)
+@st.cache_resource()
 def load_model():
     model = torch.jit.load('checkpoint/CycleGAN_Generator_50.pt')
     return model
+
+def get_psnr(img1, img2):
+    return peak_signal_noise_ratio(img1, img2)
+
+def get_ssim(img1, img2):
+    return structural_similarity(rgb2gray(img1), rgb2gray(img2), data_range=255)
 
 def predict(im, Gen_BA): 
     w, h = im.size
@@ -62,6 +71,7 @@ with st.sidebar:
 # Upload an image for style transfer
 file = st.file_uploader(label="Upload your image", type=['.png', '.jpg', 'jpeg'])
 
+
 if file:
     image = file.read()
     st.caption("Your image.")
@@ -80,6 +90,20 @@ if file:
                 img = Image.open(io.BytesIO(image)).convert("RGB")
                 gen_image = predict(img, Gen_BA)
                 st.image(gen_image, caption="Generated Image", use_column_width=True)
+                
+                img_resized = np.asarray(img.resize((256, 256)))
+                gen_image_resized = np.asarray(gen_image.resize((256, 256)))
+                
+                # img_resized = np.delete(img_resized, 0)
+                print(img_resized.shape)
+                print(gen_image_resized.shape)
+
+                psnr_score = get_psnr(img_resized, gen_image_resized)
+                st.write("PSNR: ", psnr_score)
+                
+                ssim_score = get_ssim(img_resized, gen_image_resized)
+                st.write("SSIM: ", ssim_score)
+                
 
             # Clean up memory
             del Gen_BA, img, gen_image, image

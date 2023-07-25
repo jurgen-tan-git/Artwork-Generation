@@ -3,3 +3,5 @@ Pillow
 torchvision
 streamlit
 fid-score
+skimage
+numpy
