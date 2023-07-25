@@ -45,9 +45,12 @@ except:
 
 count = 0
 for image in imagepaths:
-    img = Image.open(folderpath + '/'+ image).convert("RGB")
-    gen_image = predict(img,Gen_BA)
-    gen_image.save( './outputs/'+ 'gen_' + image)
+    try:
+        img = Image.open(folderpath + '/'+ image).convert("RGB")
+        gen_image = predict(img,Gen_BA)
+        gen_image.save( './outputs/'+ 'gen_' + image)
+    except:
+        os.remove(folderpath + '/'+ image)
     count += 1
     print(count,len(os.listdir(folderpath)))
     
