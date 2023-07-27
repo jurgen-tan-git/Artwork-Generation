@@ -3,5 +3,5 @@ Pillow
 torchvision
 streamlit
 fid-score
-numpy
+numpy==1.23
 scikit-image
