@@ -38,6 +38,10 @@ def predict(im, Gen_BA):
     output = output / 2 + 0.5
     return (transforms.ToPILImage()(output.squeeze(0)))
 
+# Different tabs for different models
+# tab1, tab2 = st.tabs(['Style Transfer', 'Reconstruction'])
+
+
 # Set the page layout to wide mode
 st.set_page_config(layout="wide")
 
@@ -70,6 +74,24 @@ with st.sidebar:
 # Upload an image for style transfer
 file = st.file_uploader(label="Upload your image", type=['.png', '.jpg', 'jpeg'])
 
+st.markdown("""
+    <style>
+    .stRadio [role=radiogroup]{
+        align-items: center;
+        justify-content: center;
+    }
+    </style>
+""",unsafe_allow_html=True)
+
+model_select = st.radio('',('Style Transfer', 'Reconstruction'), horizontal=True)
+
+if model_select == 'Style Transfer':
+    model = load_model()
+    
+elif model_select == 'Reconstruction':
+    # TO BE CHANGE tO NEW MODEL
+    model = load_model()
+
 
 if file:
     image = file.read()
@@ -77,17 +99,16 @@ if file:
 
     # Display uploaded image and generated image side by side
     col1, col2 = st.columns(2)
+    
     with col1:
         st.image(image, caption="Uploaded Image", use_column_width=True)
         pred_button = st.button("Generate")
+        
     with col2:
         if pred_button:
-            # Load the pre-trained model
-            Gen_BA = load_model()
-
             with st.spinner("Generating. Please wait..."):
                 img = Image.open(io.BytesIO(image)).convert("RGB")
-                gen_image = predict(img, Gen_BA)
+                gen_image = predict(img, model)
                 st.image(gen_image, caption="Generated Image", use_column_width=True)
                 
                 img_resized = np.asarray(img.resize((256, 256)))
@@ -105,5 +126,5 @@ if file:
                 
 
             # Clean up memory
-            del Gen_BA, img, gen_image, image
+            del model_select, model, img, gen_image, image
             torch.cuda.empty_cache()
