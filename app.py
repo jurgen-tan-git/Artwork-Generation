@@ -70,10 +70,8 @@ with st.sidebar:
         
         Click [here](https://vangoghexpo.com/) to find out more about Van Gogh: The Immersive Experience.
     """)
-    
-# Upload an image for style transfer
-file = st.file_uploader(label="Upload your image", type=['.png', '.jpg', 'jpeg'])
 
+# Radio button to select the model
 st.markdown("""
     <style>
     .stRadio [role=radiogroup]{
@@ -85,17 +83,20 @@ st.markdown("""
 
 model_select = st.radio('',('Style Transfer', 'Reconstruction'), horizontal=True)
 
-if model_select == 'Style Transfer':
-    model = load_model()
-    
-elif model_select == 'Reconstruction':
-    # TO BE CHANGE tO NEW MODEL
-    model = load_model()
+# Upload an image for style transfer
+file = st.file_uploader(label="Upload your image", type=['.png', '.jpg', 'jpeg'])
 
 
 if file:
     image = file.read()
-    st.caption("Your image.")
+
+    if model_select == 'Style Transfer':
+        model = load_model()
+        
+    elif model_select == 'Reconstruction':
+        # TO BE CHANGE tO NEW MODEL
+        model = load_model()
+
 
     # Display uploaded image and generated image side by side
     col1, col2 = st.columns(2)
