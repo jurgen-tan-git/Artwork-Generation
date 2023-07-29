@@ -5,6 +5,7 @@ from PIL import Image
 import io
 from skimage.metrics import peak_signal_noise_ratio, structural_similarity
 import numpy as np
+from reconstruct.generate_image import generate_images
 
 # Define the transformations to be applied to the input image
 transform = transforms.Compose([
@@ -13,10 +14,12 @@ transform = transforms.Compose([
 ])
 
 # Load the pre-trained CycleGAN model for style transfer
-@st.cache_resource()
-def load_model():
-    model = torch.jit.load('checkpoint/CycleGAN_Generator_50.pt')
+def load_stylemodel():
+    model = torch.jit.load('style/checkpoint/CycleGAN_Generator_50.pt')
     return model
+
+def load_reconstructmodel(image):
+    generate_images(dpath = image)
 
 def get_psnr(img1, img2):
     return peak_signal_noise_ratio(img1, img2)
@@ -86,46 +89,42 @@ model_select = st.radio('',('Style Transfer', 'Reconstruction'), horizontal=True
 # Upload an image for style transfer
 file = st.file_uploader(label="Upload your image", type=['.png', '.jpg', 'jpeg'])
 
-
+# Display uploaded image and generated image side by side
+col1, col2 = st.columns(2)
+    
 if file:
     image = file.read()
 
     if model_select == 'Style Transfer':
-        model = load_model()
+        model = load_stylemodel()
+        with col1:
+            st.image(image, caption="Uploaded Image", use_column_width=True)
+            pred_button = st.button("Generate")
+        
+        with col2:
+            if pred_button:
+                with st.spinner("Generating. Please wait..."):
+                    img = Image.open(io.BytesIO(image)).convert("RGB")
+                    gen_image = predict(img, model)
+                    st.image(gen_image, caption="Generated Image", use_column_width=True)
+                    
+                    img_resized = np.asarray(img.resize((256, 256)))
+                    gen_image_resized = np.asarray(gen_image.resize((256, 256)))
+                    
+                    # img_resized = np.delete(img_resized, 0)
+                    print(img_resized.shape)
+                    print(gen_image_resized.shape)
+
+                    psnr_score = get_psnr(img_resized, gen_image_resized)
+                    st.write("PSNR: ", psnr_score)
+                    
+                    ssim_score = get_ssim(img_resized, gen_image_resized)
+                    st.write("SSIM: ", ssim_score)
         
     elif model_select == 'Reconstruction':
         # TO BE CHANGE tO NEW MODEL
-        model = load_model()
+        model = load_reconstructmodel(image)
 
 
-    # Display uploaded image and generated image side by side
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.image(image, caption="Uploaded Image", use_column_width=True)
-        pred_button = st.button("Generate")
-        
-    with col2:
-        if pred_button:
-            with st.spinner("Generating. Please wait..."):
-                img = Image.open(io.BytesIO(image)).convert("RGB")
-                gen_image = predict(img, model)
-                st.image(gen_image, caption="Generated Image", use_column_width=True)
-                
-                img_resized = np.asarray(img.resize((256, 256)))
-                gen_image_resized = np.asarray(gen_image.resize((256, 256)))
-                
-                # img_resized = np.delete(img_resized, 0)
-                print(img_resized.shape)
-                print(gen_image_resized.shape)
 
-                psnr_score = get_psnr(img_resized, gen_image_resized)
-                st.write("PSNR: ", psnr_score)
-                
-                ssim_score = get_ssim(img_resized, gen_image_resized)
-                st.write("SSIM: ", ssim_score)
-                
 
-            # Clean up memory
-            del model_select, model, img, gen_image, image
-            torch.cuda.empty_cache()
