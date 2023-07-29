@@ -14,8 +14,10 @@ def get_psnr(img1, img2):
 def get_ssim(img1, img2):
     return structural_similarity(img1, img2, data_range=255, channel_axis=2, multichannel=True)
 
+img = None
 # Function to generate images using the selected image path.
 def generate_images_wrapper():
+    global img
     file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png;*.jpg;")])
     if file_path:
         img = Image.open(file_path)
@@ -26,25 +28,46 @@ def generate_images_wrapper():
         selected_image_label.config(image=photo)
         selected_image_label.image = photo
 
-        if v.get() == "reconstruct":
-            gen_image = generate_image.generate_images(file_path)
-        else:
-            gen_image = generate_image.generate_style_image(file_path)
+        # Clear generated photo
+        generated_image_label.config(image=None)
+        generated_image_label.image = None
 
-        # Display the generated image in the Tkinter app.
-        gen_image.thumbnail((300, 300))
-        photo = ImageTk.PhotoImage(gen_image)
+        # Store the selected image path in a variable to be used later
+        generate_images_wrapper.selected_image_path = file_path
 
-        generated_image_label.config(image=photo)
-        generated_image_label.image = photo
+# Function to generate the image and display scores when the "Generate" button is clicked
+def generate_button_click():
+    global img
+    if hasattr(generate_images_wrapper, "selected_image_path"):
+        file_path = generate_images_wrapper.selected_image_path
 
-        img_resized = np.asarray(img.resize((512, 512)))
-        gen_image_resized = np.asarray(gen_image.resize((512, 512)))
-        psnr_score = get_psnr(img_resized, gen_image_resized)
-        ssim_score = get_ssim(img_resized, gen_image_resized)
-        text.insert("insert", "PSNR: " + str(psnr_score))
-        text.insert("insert", "\nSSIM: " + str(ssim_score))
+        if file_path:
+            if v.get() == "reconstruct":
+                gen_image = generate_image.generate_images(file_path)
+            else:
+                gen_image = generate_image.generate_style_image(file_path)
 
+            # Display the generated image in the Tkinter app.
+            gen_image.thumbnail((300, 300))
+            photo = ImageTk.PhotoImage(gen_image)
+
+            generated_image_label.config(image=photo)
+            generated_image_label.image = photo
+
+            img_resized = np.asarray(img.resize((512, 512)))
+            gen_image_resized = np.asarray(gen_image.resize((512, 512)))
+            psnr_score = get_psnr(img_resized, gen_image_resized)
+            ssim_score = get_ssim(img_resized, gen_image_resized)
+
+            # Clear the existing text before inserting new scores
+            text.delete("1.0", "end")
+
+            text.insert("insert", "PSNR: " + str(psnr_score))
+            text.insert("insert", "\nSSIM: " + str(ssim_score))
+    else:
+        # No image selected, display an error message
+        text.delete("1.0", "end")
+        text.insert("insert", "Please select an image first!")
 
 # Create the main application window
 root = tk.Tk()
@@ -71,14 +94,15 @@ open_button.pack(pady=5)
 selected_image_label = tk.Label(root)
 selected_image_label.pack(pady=10)
 
-
-
 # Create a label to display the generated image
 generated_image_label = tk.Label(root)
 generated_image_label.pack(pady=10)
 
-# Display PSNR score
+# Create the "Generate" button
+generate_button = tk.Button(root, text="Generate", command=generate_button_click)
+generate_button.pack(pady=5)
 
+# Display PSNR score
 text = tk.Text(root)
 text.pack(side="bottom")
 
