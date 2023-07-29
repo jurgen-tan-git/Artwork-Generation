@@ -9,11 +9,15 @@ import generate_image
 def generate_images_wrapper():
     file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png;*.jpg;")])
     if file_path:
-        # image = Image.open(file_path)
+        image = Image.open(file_path)
+        # Display the selected image in the Tkinter app
+        image.thumbnail((300, 300))
+        photo = ImageTk.PhotoImage(image)
+
+        selected_image_label.config(image=photo)
+        selected_image_label.image = photo
+
         gen_image = generate_image.generate_images(file_path)
-        # Call the 'generate_images' function from your script here with the selected image path.
-        # Complete the 'generate_images' function with all required dependencies.
-        # The 'generate_images' function should generate an image based on the selected image path.
 
         # Display the generated image in the Tkinter app.
         gen_image.thumbnail((300, 300))
@@ -26,7 +30,7 @@ def generate_images_wrapper():
 # Create the main application window
 root = tk.Tk()
 root.title("Image Generation App")
-root.geometry("500x400")
+root.attributes("-fullscreen", True)
 
 # Create a label to show the selected image
 selected_image_label = tk.Label(root)

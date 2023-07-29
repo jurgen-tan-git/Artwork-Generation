@@ -68,6 +68,7 @@ def generate_images(
     Generate images using pretrained network pickle.
     """
     seed = random.randint(0,10000)  # pick up a random number
+    print(seed)
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
