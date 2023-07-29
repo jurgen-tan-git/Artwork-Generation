@@ -16,15 +16,15 @@ import random
 from typing import List, Optional
 
 import click
-from .dnnlib.util import open_url
+import dnnlib
 import numpy as np
 import PIL.Image
 import torch
 import torch.nn.functional as F
 
-from .legacy import load_network_pkl
-from .datasets.mask_generator_512 import RandomMask
-from .networks.mat import Generator
+import legacy
+from datasets.mask_generator_512 import RandomMask
+from networks.mat import Generator
 
 def num_range(s: str) -> List[int]:
     '''Accept either a comma separated list of numbers 'a,b,c' or a range 'a-c' and return as a list of ints.'''
@@ -79,9 +79,9 @@ def generate_images(
 
     print(f'Loading networks from: {network_pkl}')
     device = torch.device('cpu')
-    with open_url(network_pkl) as f:
+    with dnnlib.util.open_url(network_pkl) as f:
 
-        G_saved = load_network_pkl(f)['G_ema'].to(device).eval().requires_grad_(False) # type: ignore
+        G_saved = legacy.load_network_pkl(f)['G_ema'].to(device).eval().requires_grad_(False) # type: ignore
         print(f)
         
     net_res = 512 if resolution > 512 else resolution
@@ -120,21 +120,19 @@ def generate_images(
     if resolution != 512:
         noise_mode = 'random'
     with torch.no_grad():
-        for i, ipath in enumerate(img_list):
-            iname = os.path.basename(ipath).replace('.jpg', '.png')
-            print(f'Prcessing: {iname}')
-            image = read_image(ipath)
-            image = (torch.from_numpy(image).float().to(device) / 127.5 - 1).unsqueeze(0)
-            
-            mask = RandomMask(resolution) # adjust the masking ratio by using 'hole_range'
-            mask = torch.from_numpy(mask).float().to(device).unsqueeze(0)
+        print(f'Prcessing: {dpath}')
+        image = read_image(dpath)
+        image = (torch.from_numpy(image).float().to(device) / 127.5 - 1).unsqueeze(0)
+        
+        mask = RandomMask(resolution) # adjust the masking ratio by using 'hole_range'
+        mask = torch.from_numpy(mask).float().to(device).unsqueeze(0)
 
-            z = torch.from_numpy(np.random.randn(1, G.z_dim)).to(device)
-            output = G(image, mask, z, label, truncation_psi=truncation_psi, noise_mode=noise_mode)
-            output = (output.permute(0, 2, 3, 1) * 127.5 + 127.5).round().clamp(0, 255).to(torch.uint8)
-            output = output[0].cpu().numpy()
-            PIL.Image.fromarray(output, 'RGB').save(f'{outdir}/{iname}')
-
+        z = torch.from_numpy(np.random.randn(1, G.z_dim)).to(device)
+        output = G(image, mask, z, label, truncation_psi=0.5, noise_mode='const')
+        output = (output.permute(0, 2, 3, 1) * 127.5 + 127.5).round().clamp(0, 255).to(torch.uint8)
+        output = output[0].cpu().numpy()
+        output_image = PIL.Image.fromarray(output, 'RGB')
+    return output_image
 
 if __name__ == "__main__":
     generate_images() # pylint: disable=no-value-for-parameter

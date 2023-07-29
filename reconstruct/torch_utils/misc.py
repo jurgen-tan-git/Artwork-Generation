@@ -11,7 +11,7 @@ import contextlib
 import numpy as np
 import torch
 import warnings
-from ..dnnlib.util import EasyDict
+import dnnlib
 
 #----------------------------------------------------------------------------
 # Cached construction of constant tensors. Avoids CPU=>GPU copy when the
@@ -210,7 +210,7 @@ def print_module_summary(module, inputs, max_nesting=3, skip_redundant=True):
         if nesting[0] <= max_nesting:
             outputs = list(outputs) if isinstance(outputs, (tuple, list)) else [outputs]
             outputs = [t for t in outputs if isinstance(t, torch.Tensor)]
-            entries.append(EasyDict(mod=mod, outputs=outputs))
+            entries.append(dnnlib.EasyDict(mod=mod, outputs=outputs))
     hooks = [mod.register_forward_pre_hook(pre_hook) for mod in module.modules()]
     hooks += [mod.register_forward_hook(post_hook) for mod in module.modules()]
 

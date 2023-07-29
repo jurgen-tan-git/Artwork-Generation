@@ -12,9 +12,8 @@ import re
 import copy
 import numpy as np
 import torch
-from .dnnlib.util import EasyDict, open_url
-from .torch_utils.misc import copy_params_and_buffers, named_params_and_buffers
-
+import dnnlib
+from torch_utils import misc
 
 #----------------------------------------------------------------------------
 
@@ -48,7 +47,7 @@ def load_network_pkl(f, force_fp16=False):
             old = data[key]
             kwargs = copy.deepcopy(old.init_kwargs)
             if key.startswith('G'):
-                kwargs.synthesis_kwargs = EasyDict(kwargs.get('synthesis_kwargs', {}))
+                kwargs.synthesis_kwargs = dnnlib.EasyDict(kwargs.get('synthesis_kwargs', {}))
                 kwargs.synthesis_kwargs.num_fp16_res = 4
                 kwargs.synthesis_kwargs.conv_clamp = 256
             if key.startswith('D'):
@@ -56,18 +55,17 @@ def load_network_pkl(f, force_fp16=False):
                 kwargs.conv_clamp = 256
             if kwargs != old.init_kwargs:
                 new = type(old)(**kwargs).eval().requires_grad_(False)
-                copy_params_and_buffers(old, new, require_all=True)
+                misc.copy_params_and_buffers(old, new, require_all=True)
                 data[key] = new
     return data
 
 #----------------------------------------------------------------------------
 
-class _TFNetworkStub(EasyDict):
+class _TFNetworkStub(dnnlib.EasyDict):
     pass
 
 class _LegacyUnpickler(pickle.Unpickler):
     def find_class(self, module, name):
-        print(module)
         if module == 'dnnlib.tflib.network' and name == 'Network':
             return _TFNetworkStub
         return super().find_class(module, name)
@@ -88,7 +86,7 @@ def _collect_tf_params(tf_net):
 #----------------------------------------------------------------------------
 
 def _populate_module_params(module, *patterns):
-    for name, tensor in named_params_and_buffers(module):
+    for name, tensor in misc.named_params_and_buffers(module):
         found = False
         value = None
         for pattern, value_fn in zip(patterns[0::2], patterns[1::2]):
@@ -121,13 +119,13 @@ def convert_tf_generator(tf_G):
         return val if val is not None else none
 
     # Convert kwargs.
-    kwargs = EasyDict(
+    kwargs = dnnlib.EasyDict(
         z_dim                   = kwarg('latent_size',          512),
         c_dim                   = kwarg('label_size',           0),
         w_dim                   = kwarg('dlatent_size',         512),
         img_resolution          = kwarg('resolution',           1024),
         img_channels            = kwarg('num_channels',         3),
-        mapping_kwargs = EasyDict(
+        mapping_kwargs = dnnlib.EasyDict(
             num_layers          = kwarg('mapping_layers',       8),
             embed_features      = kwarg('label_fmaps',          None),
             layer_features      = kwarg('mapping_fmaps',        None),
@@ -135,7 +133,7 @@ def convert_tf_generator(tf_G):
             lr_multiplier       = kwarg('mapping_lrmul',        0.01),
             w_avg_beta          = kwarg('w_avg_beta',           0.995,  none=1),
         ),
-        synthesis_kwargs = EasyDict(
+        synthesis_kwargs = dnnlib.EasyDict(
             channel_base        = kwarg('fmap_base',            16384) * 2,
             channel_max         = kwarg('fmap_max',             512),
             num_fp16_res        = kwarg('num_fp16_res',         0),
@@ -218,7 +216,7 @@ def convert_tf_discriminator(tf_D):
         return tf_kwargs.get(tf_name, default)
 
     # Convert kwargs.
-    kwargs = EasyDict(
+    kwargs = dnnlib.EasyDict(
         c_dim                   = kwarg('label_size',           0),
         img_resolution          = kwarg('resolution',           1024),
         img_channels            = kwarg('num_channels',         3),
@@ -228,19 +226,19 @@ def convert_tf_discriminator(tf_D):
         num_fp16_res            = kwarg('num_fp16_res',         0),
         conv_clamp              = kwarg('conv_clamp',           None),
         cmap_dim                = kwarg('mapping_fmaps',        None),
-        block_kwargs = EasyDict(
+        block_kwargs = dnnlib.EasyDict(
             activation          = kwarg('nonlinearity',         'lrelu'),
             resample_filter     = kwarg('resample_kernel',      [1,3,3,1]),
             freeze_layers       = kwarg('freeze_layers',        0),
         ),
-        mapping_kwargs = EasyDict(
+        mapping_kwargs = dnnlib.EasyDict(
             num_layers          = kwarg('mapping_layers',       0),
             embed_features      = kwarg('mapping_fmaps',        None),
             layer_features      = kwarg('mapping_fmaps',        None),
             activation          = kwarg('nonlinearity',         'lrelu'),
             lr_multiplier       = kwarg('mapping_lrmul',        0.1),
         ),
-        epilogue_kwargs = EasyDict(
+        epilogue_kwargs = dnnlib.EasyDict(
             mbstd_group_size    = kwarg('mbstd_group_size',     None),
             mbstd_num_channels  = kwarg('mbstd_num_features',   1),
             activation          = kwarg('nonlinearity',         'lrelu'),
@@ -307,7 +305,7 @@ def convert_network_pickle(source, dest, force_fp16):
         --dest=stylegan2-cat-config-f.pkl
     """
     print(f'Loading "{source}"...')
-    with open_url(source) as f:
+    with dnnlib.util.open_url(source) as f:
         data = load_network_pkl(f, force_fp16=force_fp16)
     print(f'Saving "{dest}"...')
     with open(dest, 'wb') as f:
