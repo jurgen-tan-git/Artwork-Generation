@@ -121,7 +121,7 @@ def generate_images(
     if resolution != 512:
         noise_mode = 'random'
     with torch.no_grad():
-        print(f'Prcessing: {dpath}')
+        print(f'Processing: {dpath}')
         image = read_image(dpath)
         image = (torch.from_numpy(image).float().to(device) / 127.5 - 1).unsqueeze(0)
         
