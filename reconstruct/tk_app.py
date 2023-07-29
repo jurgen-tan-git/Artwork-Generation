@@ -26,7 +26,10 @@ def generate_images_wrapper():
         selected_image_label.config(image=photo)
         selected_image_label.image = photo
 
-        gen_image = generate_image.generate_images(file_path)
+        if v.get() == "reconstruct":
+            gen_image = generate_image.generate_images(file_path)
+        else:
+            gen_image = generate_image.generate_style_image(file_path)
 
         # Display the generated image in the Tkinter app.
         gen_image.thumbnail((300, 300))
@@ -47,6 +50,18 @@ def generate_images_wrapper():
 root = tk.Tk()
 root.title("Image Generation App")
 root.geometry("1000x800")
+
+# Variable to store the selected model option
+v = tk.StringVar(root, "style")
+
+radioFrame = tk.Frame(root)
+radioFrame.pack(pady=5)
+
+styleBtn = tk.Radiobutton(radioFrame, text="Style Transfer", variable=v, value="style")
+styleBtn.pack(side="left")
+
+reconstructBtn = tk.Radiobutton(radioFrame, text="Reconstruction", variable=v, value="reconstruct")
+reconstructBtn.pack(side="left")
 
 # Create a button to open the file dialog
 open_button = tk.Button(root, text="Select Image", command=generate_images_wrapper)

@@ -25,6 +25,8 @@ import torch.nn.functional as F
 import legacy
 from datasets.mask_generator_512 import RandomMask
 from networks.mat import Generator
+import torchvision.transforms as transforms
+import io
 
 def num_range(s: str) -> List[int]:
     '''Accept either a comma separated list of numbers 'a,b,c' or a range 'a-c' and return as a list of ints.'''
@@ -56,7 +58,32 @@ def named_params_and_buffers(module):
     assert isinstance(module, torch.nn.Module)
     return list(module.named_parameters()) + list(module.named_buffers())
 
+def generate_style_image(dpath: PIL.Image):
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    ])
 
+    checkpoint = "./reconstruct/pretrained/CycleGAN_Generator_50.pt"
+    model = torch.jit.load(checkpoint)
+
+    with open(dpath, "rb") as f:
+        img = f.read()
+    img = io.BytesIO(img)
+    im = PIL.Image.open(img).convert("RGB")
+    w, h = im.size
+    if h or w >= 500:
+        scale_factor = 500 / max(h, w)
+        height = int(h * scale_factor)
+        width = int(w * scale_factor)
+        im = transforms.Resize((height, width))(im)
+
+    input = transform(im)
+    model.eval()
+    output = model(input.unsqueeze(0))
+    output = output / 2 + 0.5
+    return (transforms.ToPILImage()(output.squeeze(0)))
+    
 def generate_images(
 
     dpath: PIL.Image
