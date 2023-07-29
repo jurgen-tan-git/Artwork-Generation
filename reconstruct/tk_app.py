@@ -30,15 +30,17 @@ def generate_images_wrapper():
 # Create the main application window
 root = tk.Tk()
 root.title("Image Generation App")
-root.attributes("-fullscreen", True)
+root.geometry("1000x800")
+
+# Create a button to open the file dialog
+open_button = tk.Button(root, text="Select Image", command=generate_images_wrapper)
+open_button.pack(pady=5)
 
 # Create a label to show the selected image
 selected_image_label = tk.Label(root)
 selected_image_label.pack(pady=10)
 
-# Create a button to open the file dialog
-open_button = tk.Button(root, text="Select Image", command=generate_images_wrapper)
-open_button.pack(pady=5)
+
 
 # Create a label to display the generated image
 generated_image_label = tk.Label(root)
