@@ -21,6 +21,10 @@ def generate_images_wrapper():
     file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png;*.jpg;")])
     if file_path:
         img = Image.open(file_path)
+
+    # If the image is smaller than 300x300, resize it to fit 300x300
+    if img.width < 300 or img.height < 300:
+        img = img.resize((300, 300))
         # Display the selected image in the Tkinter app
         img.thumbnail((300, 300))
         photo = ImageTk.PhotoImage(img)
