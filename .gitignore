@@ -1,2 +1,4 @@
 
 reconstruct/pretrained/FFHQ_512.pkl
+pretrained/CycleGAN_Generator_50.pt
+pretrained/FFHQ_512.pkl
