@@ -21,7 +21,6 @@ def generate_images_wrapper():
     file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png;*.jpg;")])
     if file_path:
         img = Image.open(file_path)
-        print(img)
 
     # If the image is smaller than 300x300, resize it to fit 300x300
     if img.width < 300 or img.height < 300:
@@ -88,9 +87,12 @@ def generate_button_click():
 def update_seed_input_visibility():
     selected_option = v.get()
     if selected_option == "reconstruct":
+        seed_label.pack()
         seed_label_input.pack()
     else:
+        seed_label.pack_forget()
         seed_label_input.pack_forget()
+
 
 
 # Create the main application window
@@ -136,8 +138,7 @@ generate_button = tk.Button(root, text="Generate", command=generate_button_click
 generate_button.pack(pady=5)
 
 # Display PSNR score
-text = tk.Text(root)
+text = tk.Text(root, height=5, font=("Helvetica", 10))
 text.pack(side="bottom")
-
 
 root.mainloop()
