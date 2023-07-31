@@ -26,18 +26,18 @@ def generate_images_wrapper():
     if img.width < 300 or img.height < 300:
         img = img.resize((300, 300))
         # Display the selected image in the Tkinter app
-        img.thumbnail((300, 300))
-        photo = ImageTk.PhotoImage(img)
+    img.thumbnail((300, 300))
+    photo = ImageTk.PhotoImage(img)
 
-        selected_image_label.config(image=photo)
-        selected_image_label.image = photo
+    selected_image_label.config(image=photo)
+    selected_image_label.image = photo
 
-        # Clear generated photo
-        generated_image_label.config(image=None)
-        generated_image_label.image = None
+    # Clear generated photo
+    generated_image_label.config(image=None)
+    generated_image_label.image = None
 
-        # Store the selected image path in a variable to be used later
-        generate_images_wrapper.selected_image_path = file_path
+    # Store the selected image path in a variable to be used later
+    generate_images_wrapper.selected_image_path = file_path
 
 # Function to generate the image and display scores when the "Generate" button is clicked
 def generate_button_click():
