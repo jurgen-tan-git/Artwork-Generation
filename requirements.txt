@@ -1,13 +1,7 @@
-torch==2.0.0+cpu
-Pillow
-torchvision
-streamlit
-fid-score
-numpy==1.23
-scikit-image
 easydict
 future
 matplotlib
+numpy
 opencv-python
 scikit-image
 scipy
