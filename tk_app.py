@@ -21,6 +21,7 @@ def generate_images_wrapper():
     file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png;*.jpg;")])
     if file_path:
         img = Image.open(file_path)
+        print(img)
 
     # If the image is smaller than 300x300, resize it to fit 300x300
     if img.width < 300 or img.height < 300:
@@ -84,6 +85,14 @@ def generate_button_click():
         text.delete("1.0", "end")
         text.insert("insert", "Please select an image first!")
 
+def update_seed_input_visibility():
+    selected_option = v.get()
+    if selected_option == "reconstruct":
+        seed_label_input.pack()
+    else:
+        seed_label_input.pack_forget()
+
+
 # Create the main application window
 root = tk.Tk()
 root.title("Image Generation App")
@@ -95,11 +104,12 @@ v = tk.StringVar(root, "style")
 radioFrame = tk.Frame(root)
 radioFrame.pack(pady=5)
 
-styleBtn = tk.Radiobutton(radioFrame, text="Style Transfer", variable=v, value="style")
+styleBtn = tk.Radiobutton(radioFrame, text="Style Transfer", variable=v, value="style", command=update_seed_input_visibility)
 styleBtn.pack(side="left")
 
-reconstructBtn = tk.Radiobutton(radioFrame, text="Reconstruction", variable=v, value="reconstruct")
+reconstructBtn = tk.Radiobutton(radioFrame, text="Reconstruction", variable=v, value="reconstruct", command=update_seed_input_visibility)
 reconstructBtn.pack(side="left")
+
 
 # Create a button to open the file dialog
 open_button = tk.Button(root, text="Select Image", command=generate_images_wrapper)
@@ -118,9 +128,9 @@ generated_image_label = tk.Label(image_frame)
 generated_image_label.grid(row=0, column=1)  # Place the generated image label in the second column
 
 # Seed Input
-seed_label = tk.Label(root, text="Enter Seed Number").pack()
+seed_label = tk.Label(root, text="Enter Seed Number")
 seed_label_input=tk.Entry(root, width=35)
-seed_label_input.pack()
+
 # Create the "Generate" button
 generate_button = tk.Button(root, text="Generate", command=generate_button_click)
 generate_button.pack(pady=5)
