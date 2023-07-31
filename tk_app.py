@@ -38,12 +38,23 @@ def generate_images_wrapper():
 # Function to generate the image and display scores when the "Generate" button is clicked
 def generate_button_click():
     global img
+    try:
+        if (isinstance(seed_label_input.get(), int) == False):
+            text.delete("1.0", "end")
+            text.insert("insert", "Seed must be an integer")
+    except:
+        pass
+
     if hasattr(generate_images_wrapper, "selected_image_path"):
         file_path = generate_images_wrapper.selected_image_path
 
         if file_path:
             if v.get() == "reconstruct":
-                gen_image = generate_image.generate_images(file_path)
+                if seed_label_input.get() == '':
+                    seed = None
+                else:
+                    seed = int(seed_label_input.get())
+                gen_image = generate_image.generate_images(file_path, seed)
             else:
                 gen_image = generate_image.generate_style_image(file_path)
 
@@ -90,14 +101,21 @@ reconstructBtn.pack(side="left")
 open_button = tk.Button(root, text="Select Image", command=generate_images_wrapper)
 open_button.pack(pady=5)
 
+# Create a frame to hold the image labels
+image_frame = tk.Frame(root)
+image_frame.pack(pady=10)
+
 # Create a label to show the selected image
-selected_image_label = tk.Label(root)
-selected_image_label.pack(pady=10)
+selected_image_label = tk.Label(image_frame)
+selected_image_label.grid(row=0, column=0)  # Place the selected image label in the first column
 
 # Create a label to display the generated image
-generated_image_label = tk.Label(root)
-generated_image_label.pack(pady=10)
+generated_image_label = tk.Label(image_frame)
+generated_image_label.grid(row=0, column=1)  # Place the generated image label in the second column
 
+seed_label = tk.Label(root, text="Enter First Number").pack()
+seed_label_input=tk.Entry(root, width=35)
+seed_label_input.pack()
 # Create the "Generate" button
 generate_button = tk.Button(root, text="Generate", command=generate_button_click)
 generate_button.pack(pady=5)

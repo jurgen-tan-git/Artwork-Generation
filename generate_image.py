@@ -7,12 +7,12 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 
 """Generate images using pretrained network pickle."""
+import random
 import cv2
 import pyspng
 import glob
 import os
 import re
-import random
 from typing import List, Optional
 
 import click
@@ -84,17 +84,15 @@ def generate_style_image(dpath: PIL.Image):
     output = output / 2 + 0.5
     return (transforms.ToPILImage()(output.squeeze(0)))
     
-def generate_images(
-
-    dpath: PIL.Image
-):
+def generate_images(dpath: PIL.Image, seed=None):
     network_pkl = './pretrained/FFHQ_512.pkl'
     resolution = 512
     
     """
     Generate images using pretrained network pickle.
     """
-    seed = random.randint(0,10000)  # pick up a random number
+    if seed == None:
+        seed = random.randint(0,10000)
     print(seed)
     random.seed(seed)
     np.random.seed(seed)
