@@ -41,7 +41,7 @@ def generate_button_click():
     try:
         if (isinstance(seed_label_input.get(), int) == False):
             text.delete("1.0", "end")
-            text.insert("insert", "Seed must be an integer")
+            text.insert("insert", "Seed must be an integer!")
     except:
         pass
 
@@ -113,7 +113,8 @@ selected_image_label.grid(row=0, column=0)  # Place the selected image label in 
 generated_image_label = tk.Label(image_frame)
 generated_image_label.grid(row=0, column=1)  # Place the generated image label in the second column
 
-seed_label = tk.Label(root, text="Enter First Number").pack()
+# Seed Input
+seed_label = tk.Label(root, text="Enter Seed Number").pack()
 seed_label_input=tk.Entry(root, width=35)
 seed_label_input.pack()
 # Create the "Generate" button
