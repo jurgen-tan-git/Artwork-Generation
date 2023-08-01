@@ -22,10 +22,10 @@ def generate_images_wrapper():
     if file_path:
         img = Image.open(file_path)
 
-    # If the image is smaller than 300x300, resize it to fit 300x300
-    if img.width < 300 or img.height < 300:
+    # If the image is smaller than 512x512, resize it to fit 300x300
+    if img.width < 512 or img.height < 512:
         img = img.resize((300, 300))
-        # Display the selected image in the Tkinter app
+    # Display the selected image in the Tkinter app
     img.thumbnail((300, 300))
     photo = ImageTk.PhotoImage(img)
 
@@ -58,6 +58,7 @@ def generate_button_click():
                     seed = None
                 else:
                     seed = int(seed_label_input.get())
+                    print(file_path.shape)
                 gen_image = generate_image.generate_images(file_path, seed)
             else:
                 gen_image = generate_image.generate_style_image(file_path)

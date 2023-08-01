@@ -120,13 +120,10 @@ def generate_images(dpath: PIL.Image, seed=None):
 
     def read_image(image_path):
         with open(image_path, 'rb') as f:
-            if pyspng is not None and image_path.endswith('.png'):
-                image = pyspng.load(f.read())
-            else:
-                image = PIL.Image.open(f)
-                if image.size != (512,512):
-                    image = image.resize((512,512))
-                image = np.array(image)
+            image = PIL.Image.open(f)
+            if image.size != (512,512):
+                image = image.resize((512,512))
+            image = np.array(image)
         if image.ndim == 2:
             image = image[:, :, np.newaxis] # HW => HWC
             image = np.repeat(image, 3, axis=2)
